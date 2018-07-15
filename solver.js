@@ -1,11 +1,12 @@
 const fs = require('fs');
-const { countUnflagged, placeFlags, showUnknown, logBoard, checkNotDone } = require('./helpers.js');
-const init = require('./init.js');
+const { countUnflagged, placeFlags, showUnknown, logBoard, 
+        checkIfDone, checkValid, deleteNeighborsForJson} = require('./helpers.js');
 
-const solver = (board, mines) => {
+const solver = (board) => {
   let makingProgress = true;
+  let done = false;
 
-  while (checkNotDone(board) && makingProgress) {
+  while (!done && makingProgress) {
     makingProgress = false;
     // Filter for shown cells with at least one unresolved neighbor
     let workingCells = board.reduce((allRows, row) => allRows.concat(row))
@@ -27,17 +28,11 @@ const solver = (board, mines) => {
         }
       }
     });
+    done = checkIfDone(board);
   }
-  console.log(makingProgress ? 'Solution found' : 'Solution not found');
+  console.log(makingProgress ? '\nSolution found' : '\nSolution not found');
   logBoard(board);
-  deleteNeighborsForJson(board);
-  makingProgress ? fs.writeFile('./goodCase.json', JSON.stringify(board), () => {}) :
-    fs.writeFile('./insolvableCase.json', JSON.stringify(board), () => {});
+  return done;
 }
 
-const checkValid = ({ neighbors }) => neighbors.reduce((valid, cell) => valid && !(cell.mine && cell.shown), true);
-const deleteNeighborsForJson = board => board.reduce((allRows, row) => allRows.concat(row)).forEach(cell => delete cell.neighbors);
-
-const randStart = [Math.floor(Math.random * 5), Math.floor(Math.random * 5)];
-const [state, board] = init(3, 5, 5, [1, 2]);
-solver(board, state.mines);
+module.exports = solver;
