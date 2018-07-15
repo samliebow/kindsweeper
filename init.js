@@ -1,3 +1,5 @@
+const { countMines } = require('./helpers.js');
+
 const createEmptyBoard = (height, width) => 
   Array(height).fill()
     .map(el => Array(width).fill()
@@ -7,7 +9,7 @@ const createEmptyBoard = (height, width) =>
         shown: false,
         neighbors: [],
         neighborMines: 0,
-      }));
+      }))
     );
 
 const initState = mines => ({
@@ -16,16 +18,20 @@ const initState = mines => ({
   unflaggedMines: mines,
 });
 
-const placeMines = (board, minesToPlace) => {
+const placeMines = (board, minesToPlace, start) => {
+  const [startRow, startCol] = start;
+  const startCell = board[startRow][startCol];
   while (minesToPlace) {
     const randRow = Math.floor(Math.random() * board.length);
     const randCol = Math.floor(Math.random() * board[0].length);
+
     const cell = board[randRow][randCol];
-    if(!cell.mine) {
+    if (!(cell.mine || cell === startCell)) {
       cell.mine = true;
       minesToPlace--;
     }
   }
+  return board;
 }
 
 const getNeighbors = (board, row, col) => {
@@ -37,3 +43,23 @@ const getNeighbors = (board, row, col) => {
   neighbors2D.forEach(arr => neighbors.push(...arr));
   return neighbors;
 };
+
+const init = (mines, height, width, start) => {
+  const state = initState(mines);
+  const board = createEmptyBoard(height, width);
+  placeMines(board, mines, start);
+  board.forEach((row, i) => row.forEach((cell, j) => {
+    cell.neighbors = getNeighbors(board, i, j);
+    cell.neighborMines = countMines(cell);
+  }));
+  return [state, board];
+}
+
+module.exports = init;
+
+// init(5,5,5)[1].forEach(row => {
+//   row.forEach(({mine, neighborMines})=> 
+//     process.stdout.write(`[${+mine}, ${neighborMines}]`)
+//   )
+//   console.log('');
+// })
