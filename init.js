@@ -1,4 +1,4 @@
-const { countMines } = require('./helpers.js');
+const { countMines, show } = require('./helpers.js');
 
 const createEmptyBoard = (height, width) => 
   Array(height).fill()
@@ -9,6 +9,7 @@ const createEmptyBoard = (height, width) =>
         shown: false,
         neighbors: [],
         neighborMines: 0,
+        show,
       }))
     );
 
@@ -18,9 +19,7 @@ const initState = mines => ({
   unflaggedMines: mines,
 });
 
-const placeMines = (board, minesToPlace, start) => {
-  const [startRow, startCol] = start;
-  const startCell = board[startRow][startCol];
+const placeMines = (board, minesToPlace, startCell) => {
   while (minesToPlace) {
     const randRow = Math.floor(Math.random() * board.length);
     const randCol = Math.floor(Math.random() * board[0].length);
@@ -47,11 +46,14 @@ const getNeighbors = (board, row, col) => {
 const init = (mines, height, width, start) => {
   const state = initState(mines);
   const board = createEmptyBoard(height, width);
-  placeMines(board, mines, start);
+  const [startRow, startCol] = start;
+  const startCell = board[startRow][startCol];
+  placeMines(board, mines, startCell);
   board.forEach((row, i) => row.forEach((cell, j) => {
     cell.neighbors = getNeighbors(board, i, j);
     cell.neighborMines = countMines(cell);
   }));
+  startCell.show();
   return [state, board];
 }
 
