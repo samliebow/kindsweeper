@@ -31,8 +31,15 @@ const logBoard = board => board.forEach(row => {
   });
 });
 
-const checkNotDone = board => !board.reduce((allRows, row) => allRows.concat(row))
+const checkIfDone = board => board.reduce((allRows, row) => allRows.concat(row))
   .reduce((allFlaggedOrShown, { flagged, shown }) => allFlaggedOrShown && (flagged || shown), true);
+
+const checkValid = ({ neighbors }) => neighbors.reduce((valid, cell) => valid && !(cell.mine && cell.shown), true);
+
+// Neighbors property still references original objects. 
+const copyBoard = board => board.map(row => row.slice().map(cell => Object.assign({}, cell)));
+
+const deleteNeighborsForJson = board => board.reduce((allRows, row) => allRows.concat(row)).forEach(cell => delete cell.neighbors);
 
 module.exports = {
   countFlagged,
@@ -44,5 +51,8 @@ module.exports = {
   showUnknown,
   show,
   logBoard,
-  checkNotDone,
+  checkIfDone,
+  checkValid,
+  copyBoard,
+  deleteNeighborsForJson
 }
