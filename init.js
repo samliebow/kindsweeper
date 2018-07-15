@@ -1,4 +1,5 @@
-const { countMines, show } = require('./helpers.js');
+const { countMines, show, copyBoard } = require('./helpers.js');
+const solver = require('./solver.js');
 
 const createEmptyBoard = (height, width) => 
   Array(height).fill()
@@ -31,7 +32,7 @@ const placeMines = (board, minesToPlace, startCell) => {
     }
   }
   return board;
-}
+};
 
 const getNeighbors = (board, row, col) => {
   const cell = board[row][col];
@@ -43,10 +44,8 @@ const getNeighbors = (board, row, col) => {
   return neighbors;
 };
 
-const init = (mines, height, width, start) => {
-  const state = initState(mines);
+const createFinishedBoard = (mines, height, width, startRow, startCol) => {
   const board = createEmptyBoard(height, width);
-  const [startRow, startCol] = start;
   const startCell = board[startRow][startCol];
   placeMines(board, mines, startCell);
   board.forEach((row, i) => row.forEach((cell, j) => {
@@ -54,14 +53,27 @@ const init = (mines, height, width, start) => {
     cell.neighborMines = countMines(cell);
   }));
   startCell.show();
-  return [state, board];
+  return board;
+};
+
+const verifySolvable = board => {
+  const copiedBoard = copyBoard(board);
+  copiedBoard.forEach((row, i) => row.forEach((cell, j) => {
+    cell.neighbors = getNeighbors(copiedBoard, i, j);
+  }));
+  return solver(copiedBoard);
 }
 
-module.exports = init;
+const init = (mines, height, width, startRow, startCol) => {
+  const state = initState(mines);
+  let board;
+  let tries = 0;
+  let solvable = false;
+  while (!solvable && tries++ <= 100) {
+    board = createFinishedBoard(mines, height, width, startRow, startCol);
+    solvable = verifySolvable(board)
+  }
+  return solvable ? [state, board] : `Not solvable after a hundred tries`;
+};
 
-// init(5,5,5)[1].forEach(row => {
-//   row.forEach(({mine, neighborMines})=> 
-//     process.stdout.write(`[${+mine}, ${neighborMines}]`)
-//   )
-//   console.log('');
-// })
+module.exports = init;
